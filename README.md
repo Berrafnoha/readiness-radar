@@ -5,6 +5,9 @@ It cross-checks plan vs. deliveries vs. quantities vs. inspections with **determ
 and keeps **operational confirmation** (Field Engineer) separate from **formal authorization** (Project Director).
 All demo data is synthetic.
 
+## The live demo link
+[Open the Live Application](https://readiness-radar.onrender.com)
+
 ## Run
 ```powershell
 python -m venv .venv
