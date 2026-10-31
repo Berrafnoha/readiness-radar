@@ -1,0 +1,10 @@
+id,name,work_package,stage_id,planned_start,planned_finish,actual_start,status
+A1,Site clearing,WP-CIVIL,S1,2026-10-19,2026-10-22,2026-10-19,complete
+A2,Survey and setting out,WP-CIVIL,S1,2026-10-23,2026-10-24,2026-10-23,in_progress
+A3,Excavation zone A,WP-EXC,S1,2026-10-26,2026-11-02,,planned
+A4,Dewatering and pump installation,WP-EXC,S1,2026-10-26,2026-11-02,,planned
+A5,Excavation zone B,WP-EXC,S1,2026-11-03,2026-11-09,,planned
+A6,Foundation formwork,WP-FND,S2,2026-11-10,2026-11-16,,planned
+A7,Rebar fixing,WP-FND,S2,2026-11-14,2026-11-19,,planned
+A8,Concrete pour,WP-FND,S2,2026-11-20,2026-11-21,,planned
+A9,Backfill and compaction,WP-FND,S2,2026-11-22,2026-11-24,,planned

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Project Readiness Radar</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#1c2733;--mut:#6b7a8c;--line:#e2e8f0;--nav:#12283f;--acc:#1f6feb;--crit:#b42318;--high:#d9480f;--med:#b7791f;--low:#2f855a}
+@media(prefers-color-scheme:dark){:root{--bg:#0e141b;--card:#18212b;--ink:#e6edf3;--mut:#8b9cb0;--line:#2a3644;--nav:#0a1118;--acc:#58a6ff}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--nav);color:#fff;display:flex;align-items:center;gap:20px;padding:0 24px;height:56px;position:sticky;top:0;z-index:5}
+header b{font-size:17px}nav{display:flex;gap:4px;flex:1}nav a{color:#c5d3e3;text-decoration:none;padding:8px 14px;border-radius:6px}
+nav a.on,nav a:hover{background:rgba(255,255,255,.12);color:#fff}select,input,button{font:inherit}
+select,input{padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+button{padding:8px 14px;border:0;border-radius:6px;background:var(--acc);color:#fff;cursor:pointer}button.sec{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+main{max-width:1150px;margin:24px auto;padding:0 20px}h1{margin:0 0 16px;font-size:22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.kpi small{color:var(--mut)}.kpi div{font-size:32px;font-weight:700}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mut);font-weight:600}
+.wrap{overflow-x:auto}.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;background:var(--mut);margin:2px}
+.critical{background:var(--crit)}.high{background:var(--high)}.medium{background:var(--med)}.low{background:var(--low)}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}summary{padding:12px 16px;cursor:pointer;font-weight:600}
+details>div{padding:0 16px 16px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}.tabs{display:flex;gap:8px;margin-bottom:14px}
+.slip{color:var(--high);font-weight:700}#toast{position:fixed;right:20px;bottom:20px;padding:12px 18px;border-radius:8px;color:#fff;background:var(--low);display:none;max-width:420px}
+#toast.err{background:var(--crit)}.mut{color:var(--mut)}
+</style></head><body>
+<header><b>◎ Readiness Radar</b>
+<nav id="nav"><a href="#dashboard">Dashboard</a><a href="#findings">Findings</a><a href="#stages">Stages</a><a href="#audit">Audit log</a></nav>
+<span class="mut" style="font-size:12px">Simulated login</span><select id="user"></select></header>
+<main id="view"></main><div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ACTIVE=['open','investigating','confirmed','needs_info'];let USERS={},fview='risk';
+const role=()=>USERS[$('#user').value];
+function toast(m,err){const t=$('#toast');t.textContent=m;t.className=err?'err':'';t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',4500)}
+async function api(p,body){const r=await fetch('/api'+p,{method:body?'POST':'GET',headers:{'Content-Type':'application/json','X-User':$('#user').value},body:body?JSON.stringify(body):undefined});
+ const d=await r.json().catch(()=>({}));if(!r.ok){const m=typeof d.detail==='string'?d.detail:'Request failed';toast(m,true);throw new Error(m)}return d}
+const chip=(t,c)=>`<span class="chip ${c||t}">${esc(t)}</span>`;
+const kpi=(l,v)=>`<div class="card kpi"><small>${l}</small><div>${v}</div></div>`;
+const tbl=(h,rows)=>`<div class="wrap"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rows.join('')}</table></div>`;
+async function dashboard(){const d=await api('/dashboard');return `<h1>Project readiness</h1><div class="grid">${kpi('Active risks',d.risks)}${kpi('Data gaps',d.gaps)}${kpi('Activities forecast to slip',d.slipping)}${kpi('Worst slip (days)',d.worst)}</div>
+<div class="card"><b>Plan vs forecast</b>${tbl(['ID','Activity','Stage','Status','Start','Finish','Slip'],d.activities.map(a=>`<tr><td>${a.id}</td><td>${esc(a.name)}</td><td>${a.stage}</td><td>${a.status}</td><td>${a.start}</td><td>${a.finish}</td><td class="${a.slip?'slip':''}">${a.slip?'+'+a.slip+' d':'-'}</td></tr>`))}</div>`}
+function finding(f){const ev=Object.entries(f.evidence).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(typeof v==='object'?JSON.stringify(v):v)}</td></tr>`).join('');
+ const aff=f.affected.map(a=>`<span class="chip">${esc(a.id)} +${a.slip_days}d</span>`).join('')||'<span class="mut">None identified</span>';
+ let forms='';if(ACTIVE.includes(f.status)){if(role()!=='field_engineer')forms='<p class="mut">Read-only for this role. Only a Field Engineer verifies facts.</p>';else{
+  if(f.rule_id==='R1')forms+=`<div class="row"><b>Verified delivery date:</b><input type="date" class="nd" value="${esc(f.evidence.delivery_date)}"><input class="src" placeholder="Source (e.g. supplier email ref)" size="28"><button data-item="${esc(f.evidence.item)}" onclick="confirmDate(this)">Record</button></div>`;
+  forms+=`<div class="row"><b>Review:</b><select class="dec"><option value="investigating">Under investigation</option><option value="confirmed">Valid risk confirmed</option><option value="false_positive">False positive</option><option value="needs_info">Needs more information</option></select><input class="com" placeholder="Comment (required)" size="28"><button class="sec" data-fp="${esc(f.fingerprint)}" onclick="review(this)">Record review</button></div>`}}
+ return `<details><summary>${chip(f.severity)} ${esc(f.title)} <span class="mut">· ${f.status}</span></summary><div><div class="wrap"><table>${ev}</table></div><p><b>Downstream affected:</b> ${aff}</p>${forms}</div></details>`}
+async function findings(){const all=await api('/findings');const sel=all.filter(f=>fview==='closed'?!ACTIVE.includes(f.status):ACTIVE.includes(f.status)&&f.kind===fview);
+ const tab=(k,l)=>`<button class="${fview===k?'':'sec'}" onclick="fview='${k}';render()">${l}</button>`;
+ return `<h1>Findings</h1><div class="tabs">${tab('risk','Risks')}${tab('data_gap','Data gaps')}${tab('closed','Closed')}</div>${sel.map(finding).join('')||'<p class="mut">Nothing here.</p>'}`}
+async function stages(){const s=await api('/stages');const eng=role()==='field_engineer',dir=role()==='project_director';
+ return '<h1>Stage readiness</h1>'+s.map(x=>`<div class="card"><b>${x.id} · ${esc(x.name)}</b> ${chip(x.status.replace('_',' '),x.status==='authorized'?'low':'medium')}${x.authorized_by?`<div class="mut">Authorized by ${esc(x.authorized_by)}</div>`:''}
+ ${tbl(['Inspection','Status','Closed by'],x.inspections.map(i=>`<tr><td>${i.id} · ${esc(i.name)}</td><td>${i.status}</td><td>${esc(i.closed_by||'')}${i.status==='open'&&eng?` <button class="sec" onclick="act('/inspections/${i.id}/close','Inspection closed')">Close</button>`:''}</td></tr>`))}
+ <div class="row">${x.status==='planned'&&eng?`<button onclick="act('/stages/${x.id}/ready','Stage submitted')">Submit stage as ready</button>`:''}${x.status==='ready_requested'&&dir?`<button onclick="act('/stages/${x.id}/authorize','Stage authorized')">Authorize stage (director)</button>`:''}${x.status==='ready_requested'&&!dir?'<span class="mut">Waiting for director authorization</span>':''}</div></div>`).join('')}
+async function audit(){const a=await api('/audit');return `<h1>Audit log</h1><div class="card">${a.ok?`✅ Hash chain intact (${a.info} entries)`:`❌ Chain broken at entry #${a.info}`} · <a href="/api/audit" target="_blank">JSON</a> <button class="sec" onclick="resetDemo()" style="float:right">Reset demo data</button></div>
+ <div class="card">${tbl(['#','Time','User','Action','Details'],a.rows.slice().reverse().slice(0,60).map(r=>`<tr><td>${r.seq}</td><td>${esc(r.ts)}</td><td>${esc(r.user)}</td><td>${esc(r.action)}</td><td class="mut">${esc(r.payload)}</td></tr>`))}</div>`}
+const pages={dashboard,findings,stages,audit};
+async function render(){const p=(location.hash||'#dashboard').slice(1);document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.hash==='#'+p));
+ try{$('#view').innerHTML=await (pages[p]||dashboard)()}catch(e){$('#view').innerHTML='<p class="mut">Could not load this page.</p>'}}
+async function act(path,msg){try{await api(path,{});toast(msg);render()}catch(e){}}
+async function confirmDate(b){const d=b.closest('details');try{await api('/confirm',{item:b.dataset.item,date:d.querySelector('.nd').value,note:d.querySelector('.src').value});toast('Verified date recorded; risks recalculated');render()}catch(e){}}
+async function review(b){const d=b.closest('details');try{await api('/review',{fingerprint:b.dataset.fp,decision:d.querySelector('.dec').value,comment:d.querySelector('.com').value});toast('Review recorded');render()}catch(e){}}
+async function resetDemo(){await api('/reset',{});toast('Demo data reset');render()}
+(async()=>{USERS=await (await fetch('/api/users')).json();$('#user').innerHTML=Object.keys(USERS).map(u=>`<option>${esc(u)}</option>`).join('');$('#user').onchange=render;addEventListener('hashchange',render);render()})();
+</script></body></html>

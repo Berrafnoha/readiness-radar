@@ -1,0 +1,13 @@
+# Python / environment
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Runtime data (created automatically from data/seed on first launch)
+data/radar.db
+data/*.db
+
+# Secrets: NEVER commit these
+.env
+.streamlit/secrets.toml

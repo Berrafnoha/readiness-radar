@@ -1,0 +1,4 @@
+id,stage_id,name,required,status,closed_by,closed_at
+I1,S1,Soil bearing test,1,closed,Lab report LR-77,2026-10-20
+I2,S1,Excavation depth survey,1,open,,
+I3,S2,Rebar inspection before pour,1,open,,
