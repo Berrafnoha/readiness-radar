@@ -11,7 +11,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python -m pytest -q              # 34 tests should pass
-streamlit run app.py
+python -m uvicorn api:app --reload
 ```
 Optional AI explainer (works without it, using a template fallback):
 ```powershell
