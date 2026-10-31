@@ -15,8 +15,8 @@ streamlit run app.py
 ```
 Optional AI explainer (works without it, using a template fallback):
 ```powershell
-$env:GEMINI_API_KEY="your_key"          # or $env:GROQ_API_KEY="your_key"
-$env:EXPLAINER_MODEL="gemini-3.5-flash" # use a model your key supports; names change often
+$env:GEMINI_API_KEY="your_key"         
+$env:EXPLAINER_MODEL="gemini-3.5-flash"
 streamlit run app.py
 ```
 
